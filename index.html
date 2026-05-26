@@ -105,6 +105,15 @@
             cursor: pointer; color: var(--primary); font-weight: bold;
         }
 
+        /* 音频迷你悬浮图标 */
+        .music-toggle {
+            position: fixed; top: 20px; right: 20px; background: rgba(255,255,255,0.85);
+            width: 38px; height: 38px; border-radius: 50%; display: flex;
+            justify-content: center; align-items: center; cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1); z-index: 4000; font-size: 1.2rem;
+        }
+        .music-rotating { animation: rotateMusic 3s linear infinite; }
+        
         /* 互动解谜 */
         .quiz-item { margin-bottom: 25px; padding: 20px; border: 2px dashed var(--secondary); border-radius: 20px; text-align: center; }
         input { width: 75%; padding: 12px; border: 2px solid var(--secondary); border-radius: 12px; text-align: center; outline: none; font-size: 1rem; }
@@ -155,6 +164,9 @@
     </style>
 </head>
 <body>
+    <audio id="bgm" src="Happy Birthday.mp3" loop></audio>
+    
+    <div id="musicBtn" class="music-toggle" onclick="toggleMusic()" style="display: none;">🎵</div>
 
     <canvas id="fireworks"></canvas>
 
@@ -262,23 +274,42 @@
     </div>
 
     <script>
-        // 倒计时切场
+        const audio = document.getElementById('bgm');
+        const musicBtn = document.getElementById('musicBtn');
+
         function startCountdown() {
+            // 用户触发点击，借此机会播放音乐，绕过浏览器拦截机制
+            audio.play().then(() => {
+                musicBtn.style.display = 'flex';
+                musicBtn.classList.add('music-rotating');
+            }).catch(err => console.log("音频播放因浏览器安全策略受阻:", err));
+
             document.getElementById('stage1').style.display = 'none';
             const overlay = document.getElementById('countdown-overlay');
             const numBox = document.getElementById('count-num');
             overlay.style.display = 'flex';
             let count = 10;
             const timer = setInterval(() => {
-                count--;
-                numBox.innerText = count;
+                count--; numBox.innerText = count;
                 if(count <= 0) {
-                    clearInterval(timer);
-                    overlay.style.display = 'none';
+                    clearInterval(timer); overlay.style.display = 'none';
                     document.getElementById('stage2').style.display = 'block';
                     fireworks.launch();
                 }
             }, 1000);
+        }
+
+        // 音频控制开关
+        function toggleMusic() {
+            if (audio.paused) {
+                audio.play();
+                musicBtn.classList.add('music-rotating');
+                musicBtn.innerText = "🎵";
+            } else {
+                audio.pause();
+                musicBtn.classList.remove('music-rotating');
+                musicBtn.innerText = "🔇";
+            }
         }
 
         // 导航切换
