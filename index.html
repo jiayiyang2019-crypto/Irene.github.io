@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Happy Birthday to Irene 💖</title>
+    <style>
+        :root {
+            --primary: #e07a5f;
+            --secondary: #fec5bb;
+            --bg-main: #fcf8f4;
+            --accent: #81b29a;
+            --cake-pink: #ffb5a7;
+            --cake-cream: #fcd5ce;
+        }
+
+        body, html {
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            font-family: 'Segoe UI', 'PingFang SC', sans-serif;
+            background: var(--bg-main); color: #5c5552;
+            overflow-x: hidden;
+        }
+
+        /* 纯前端烟花画布 */
+        #fireworks {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 1000;
+        }
+
+        /* 阶段一：倒计时前的门禁系统 */
+        #stage1 {
+            display: flex; justify-content: center; align-items: center;
+            height: 100vh; background: #fae1dd;
+        }
+        .invitation {
+            background: white; padding: 40px; border-radius: 30px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.05);
+            width: 85%; max-width: 450px; text-align: center;
+            animation: slideUp 0.8s ease;
+        }
+        .secret-btn {
+            display: inline-block; margin-top: 25px; background: var(--primary);
+            color: white; padding: 12px 30px; border-radius: 20px;
+            font-weight: bold; cursor: pointer; border: none; transition: 0.3s;
+        }
+        .secret-btn:hover { transform: scale(1.05); }
+
+        /* 倒计时层 */
+        #countdown-overlay {
+            position: fixed; inset: 0; background: rgba(224, 122, 95, 0.98);
+            display: none; flex-direction: column; justify-content: center;
+            align-items: center; color: white; z-index: 2000;
+        }
+        #count-num { font-size: 8rem; font-weight: bold; }
+
+        /* 阶段二：主星球系统 */
+        #stage2 { display: none; padding-top: 20px; padding-bottom: 50px; }
+        .system-container { max-width: 800px; margin: 0 auto; padding: 20px; }
+
+        .nav-bar {
+            display: flex; justify-content: center; gap: 10px; flex-wrap: wrap;
+            margin-bottom: 30px; position: sticky; top: 10px; z-index: 100;
+        }
+        .nav-btn {
+            padding: 12px 20px; border: none; border-radius: 20px;
+            background: #fff; color: var(--primary); font-weight: bold;
+            cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.05); transition: 0.3s;
+        }
+        .nav-btn.active { background: var(--primary); color: white; }
+
+        .content-card {
+            background: white; border-radius: 24px; padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.03); display: none;
+            animation: fadeIn 0.5s ease; position: relative;
+        }
+        .content-card.active { display: block; }
+
+        /* 信封及拆信动效 */
+        .envelope-wrapper {
+            margin: 40px auto; width: 200px; height: 140px;
+            background: #fcd5ce; border-radius: 0 0 10px 10px;
+            position: relative; cursor: pointer;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+            transition: transform 0.3s;
+        }
+        .envelope-wrapper:hover { transform: translateY(-5px); }
+        .envelope-top {
+            position: absolute; top: 0; left: 0; width: 0; height: 0;
+            border-left: 100px solid transparent; border-right: 100px solid transparent;
+            border-top: 80px solid #ffb5a7; border-radius: 10px 10px 0 0;
+            transform-origin: top; transition: transform 0.4s; z-index: 3;
+        }
+        .letter-modal {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.4);
+            display: none; justify-content: center; align-items: center; z-index: 3000;
+        }
+        .letter-paper {
+            background: #fffdf9; width: 85%; max-width: 450px; padding: 35px;
+            border-radius: 20px; border: 8px double var(--secondary);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1); position: relative;
+            animation: slideUp 0.5s ease; max-height: 70vh; overflow-y: auto;
+        }
+        .close-letter {
+            position: absolute; top: 15px; right: 15px; font-size: 1.5rem;
+            cursor: pointer; color: var(--primary); font-weight: bold;
+        }
+
+        /* 互动解谜 */
+        .quiz-item { margin-bottom: 25px; padding: 20px; border: 2px dashed var(--secondary); border-radius: 20px; text-align: center; }
+        input { width: 75%; padding: 12px; border: 2px solid var(--secondary); border-radius: 12px; text-align: center; outline: none; font-size: 1rem; }
+        .btn-check { margin-top: 15px; padding: 10px 30px; background: var(--primary); color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: bold; }
+
+        /* 逼真复古奶油蛋糕样式 */
+        .cake-wrapper { display: none; margin-top: 30px; text-align: center; animation: fadeIn 0.8s; }
+        .cake-container {
+            position: relative; width: 240px; height: 220px; margin: 0 auto; cursor: pointer;
+        }
+        .cake-tier {
+            background: linear-gradient(135deg, #fff, var(--cake-cream));
+            border-radius: 12px; margin: 0 auto; position: relative;
+            border: 4px solid #fff; box-shadow: 0 8px 15px rgba(0,0,0,0.05);
+        }
+        .tier-bottom { width: 200px; height: 80px; }
+        .tier-top { width: 150px; height: 70px; margin-bottom: -4px; z-index: 2; position: relative; }
+        .cream-drop {
+            position: absolute; bottom: -10px; width: 100%; height: 15px;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none"><path d="M0,0V50c50,20,100,20,150,0s100-20,150,0,100,20,150,0,100-20,150,0,100,20,150,0,100-20,150,0V0Z" fill="%23fff"/></svg>') bottom repeat-x;
+        }
+        .candle {
+            width: 8px; height: 35px; background: linear-gradient(to right, #ffb5a7, #ffcad4);
+            position: absolute; top: -35px; border-radius: 4px;
+        }
+        .flame {
+            width: 10px; height: 14px; background: #ffb703; border-radius: 50% 50% 20% 20%;
+            position: absolute; top: -15px; left: -1px; animation: flicker 0.1s ease infinite alternate;
+        }
+        .bite-bubble {
+            position: absolute; top: -50px; left: 50%; transform: translateX(-50%);
+            background: var(--primary); color: white; padding: 6px 15px;
+            border-radius: 15px; font-size: 0.85rem; font-weight: bold;
+            display: none; animation: popUp 0.4s ease;
+        }
+
+        /* 瀑布流/矩阵式高质感相册 */
+        .gallery-matrix { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; }
+        .matrix-item { background: #fff8f6; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.02); }
+        .matrix-img { width: 100%; height: 200px; object-fit: cover; transition: 0.3s; }
+        .matrix-img:hover { transform: scale(1.03); }
+        .matrix-desc { padding: 10px; font-size: 0.85rem; text-align: center; color: #888; }
+
+        @keyframes flicker { 0% { transform: scale(1); } 100% { transform: scale(1.1) translateY(-1px); } }
+        @keyframes popUp { from { opacity: 0; transform: translate(-50%, 10px); } to { opacity: 1; transform: translate(-50%, 0); } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    </style>
+</head>
+<body>
+
+    <canvas id="fireworks"></canvas>
+
+    <div id="stage1">
+        <div class="invitation">
+            <h2 style="color: var(--primary); margin:0 0 10px 0;">✨ Irene's Planet ✨</h2>
+            <p style="color: #888; font-size: 0.95rem;">专属赵煜琳的 23 岁生日宇宙已准备就绪</p>
+            <p style="font-weight: bold; color: var(--primary);">2018 ➔ 2026</p>
+            <button class="secret-btn" onclick="startCountdown()">唤醒时光机 🚀</button>
+        </div>
+    </div>
+
+    <div id="countdown-overlay">
+        <h2 style="letter-spacing: 2px;">正在连接记忆轨道...</h2>
+        <div id="count-num">10</div>
+    </div>
+
+    <div id="stage2">
+        <div class="nav-bar">
+            <button class="nav-btn active" onclick="showTab('planet', this)">🪐 宇宙主页</button>
+            <button class="nav-btn" onclick="showTab('quiz', this)">🧩 专属谜题</button>
+            <button class="nav-btn" onclick="showTab('gallery', this)">📸 限定记忆廊</button>
+        </div>
+
+        <div class="system-container">
+            <div id="planet" class="content-card active" style="text-align: center;">
+                <img src="大月亮.jpeg" style="width: 130px; height: 130px; border-radius: 50%; object-fit: cover; border: 4px solid #fff; box-shadow: 0 5px 15px rgba(0,0,0,0.1);">
+                <h2 style="color: var(--primary); margin: 15px 0 5px 0;">你好呀，Irene</h2>
+                <p style="font-size: 0.9rem; color: #888; margin-bottom: 30px;">“相识的第8年，这里有一封给你的秘密信件”</p>
+                
+                <div class="envelope-wrapper" onclick="openLetter()">
+                    <div class="envelope-top" id="env-top"></div>
+                    <div style="position: absolute; bottom: 15px; width: 100%; color: white; font-weight: bold; font-size: 0.9rem; z-index: 5; text-shadow: 0 2px 4px rgba(0,0,0,0.1);">点我拆信 ✉️</div>
+                </div>
+
+                <img src="星空展.jpeg" style="width: 100%; border-radius: 18px; margin-top: 30px; max-height: 220px; object-fit: cover;">
+            </div>
+
+            <div class="letter-modal" id="letterModal" onclick="closeLetter(event)">
+                <div class="letter-paper" onclick="event.stopPropagation()">
+                    <span class="close-letter" onclick="document.getElementById('letterModal').style.display='none'">×</span>
+                    <h3 style="color: var(--primary); text-align: center; border-bottom: 2px dashed var(--secondary); padding-bottom: 10px;">✨ 生日快乐呀，Irene！ 🎂</h3>
+                    <p style="line-height: 1.8; font-size: 0.98rem; text-indent: 2em; text-align: justify;">
+                        亲爱的琳琳（Irene），祝你23岁生日快乐呀！🎉 真的太奇妙了，一转眼我们竟然已经一起走过了8年。从2018年我们在高中的第一次相遇，到2026年现在，这一路上有了你的陪伴，每一天都闪闪发光。
+                    </p>
+                    <p style="line-height: 1.8; font-size: 0.98rem; text-indent: 2em; text-align: justify;">
+                        还记得我们一起看过的绝美星空展、在海边吹过的晚风、还有无数个在镜子前大笑贴贴、用搞怪滤镜对镜自拍的瞬间吗？一整本相册都装不下我们的快乐！
+                    </p>
+                    <p style="line-height: 1.8; font-size: 0.98rem; text-indent: 2em; text-align: justify;">
+                        硕士毕业是全新的起点，愿我的女孩在未来的日子里，能看遍喜欢的风景，读满热爱的公路文，谈个人品好并且超喜欢你的有着8块腹肌的192帅锅。无论未来多远，我都一直在你身边！永远做彼此的最强后盾，贴贴！👩‍❤️‍👩❤️
+                    </p>
+                    <p style="text-align: right; font-weight: bold; color: var(--primary); margin-top: 30px;">最爱你的闺蜜 💖<br>2026.05.28</p>
+                </div>
+            </div>
+
+            <div id="quiz" class="content-card">
+                <div class="quiz-container" id="quiz-flow">
+                    <div class="quiz-item" id="q1-box">
+                        <p style="font-weight: bold;">Q1: 我们都喜欢看什么类型的小说？📖</p>
+                        <input type="text" id="ans1" placeholder="请输入三个字...">
+                        <br><button class="btn-check" onclick="checkQ1()">提交验证</button>
+                    </div>
+                    <div class="quiz-item" id="q2-box" style="display: none;">
+                        <p style="font-weight: bold;">Q2: 截至2026年，我们认识了多少年了？📅</p>
+                        <input type="text" id="ans2" placeholder="例如: X年">
+                        <br><button class="btn-check" onclick="checkQ2()">解锁生日彩蛋</button>
+                    </div>
+                    <p id="quiz-msg" style="text-align: center; font-weight: bold; color: var(--primary);"></p>
+                </div>
+
+                <div class="cake-wrapper" id="cakeSection">
+                    <h3 style="color: var(--primary); margin-bottom: 5px;">🎂 叮咚！你的专属复古奶油蛋糕派送成功！</h3>
+                    <p style="font-size: 0.85rem; color: #888;">（快拿手指“戳”它，模拟切开并把它一口一口吃掉吧！）</p>
+                    
+                    <div class="cake-container" onclick="eatCake()">
+                        <div class="bite-bubble" id="biteTip">啊呜！超甜！😋</div>
+                        <div class="cake-tier tier-top" id="cakeTop">
+                            <div class="candle" style="left: 40px;"><div class="flame"></div></div>
+                            <div class="candle" style="left: 100px;"><div class="flame"></div></div>
+                            <div class="cream-drop"></div>
+                        </div>
+                        <div class="cake-tier tier-bottom" id="cakeBottom">
+                            <div class="cream-drop"></div>
+                        </div>
+                    </div>
+                    <h2 id="cake-status" style="color: var(--accent); margin-top: 20px;">剩余蛋糕：100% 🍰</h2>
+                </div>
+            </div>
+
+            <div id="gallery" class="content-card">
+                <h3 style="text-align: center; color: var(--primary); margin-top: 0;">📸 我们的 8 年独家记忆集</h3>
+                <div class="gallery-matrix">
+                    <div class="matrix-item"><img src="合照1.jpeg" class="matrix-img"><div class="matrix-desc">电影院里合照一张 📽️</div></div>
+                    <div class="matrix-item"><img src="合照2.jpeg" class="matrix-img"><div class="matrix-desc">贴贴我的好闺闺</div></div>
+                    <div class="matrix-item"><img src="街拍.jpeg" class="matrix-img"><div class="matrix-desc">185被街拍时刻 📸</div></div>
+                    <div class="matrix-item"><img src="看海.jpeg" class="matrix-img"><div class="matrix-desc">捕捉可爱</div></div>
+                    <div class="matrix-item"><img src="大月亮.jpeg" class="matrix-img"><div class="matrix-desc">看展</div></div>
+                    <div class="matrix-item"><img src="星空展.jpeg" class="matrix-img"><div class="matrix-desc">星空展</div></div>
+                    <div class="matrix-item"><img src="奶茶.jpeg" class="matrix-img"><div class="matrix-desc">都是奶茶控哈哈哈哈 🧋</div></div>
+                    <div class="matrix-item"><img src="美食1.jpeg" class="matrix-img"><div class="matrix-desc">心心念念的韩餐 🍗</div></div>
+                    <div class="matrix-item"><img src="牛排.jpeg" class="matrix-img"><div class="matrix-desc">在波尔多L'Entrecôté吃牛排薯条 🥩🍟</div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 倒计时切场
+        function startCountdown() {
+            document.getElementById('stage1').style.display = 'none';
+            const overlay = document.getElementById('countdown-overlay');
+            const numBox = document.getElementById('count-num');
+            overlay.style.display = 'flex';
+            let count = 10;
+            const timer = setInterval(() => {
+                count--;
+                numBox.innerText = count;
+                if(count <= 0) {
+                    clearInterval(timer);
+                    overlay.style.display = 'none';
+                    document.getElementById('stage2').style.display = 'block';
+                    fireworks.launch();
+                }
+            }, 1000);
+        }
+
+        // 导航切换
+        function showTab(tabId, btn) {
+            document.querySelectorAll('.content-card').forEach(c => c.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            btn.classList.add('active');
+        }
+
+        // 拆信封弹窗
+        function openLetter() {
+            document.getElementById('env-top').style.transform = 'rotateX(180deg)';
+            setTimeout(() => {
+                document.getElementById('letterModal').style.display = 'flex';
+            }, 300);
+        }
+        function closeLetter(e) {
+            if(e.target.id === 'letterModal') {
+                document.getElementById('letterModal').style.display = 'none';
+            }
+        }
+
+        // 答题解锁链条
+        function checkQ1() {
+            if(document.getElementById('ans1').value.trim() === "公路文") {
+                fireworks.launch();
+                document.getElementById('quiz-msg').innerText = "🎉 答对啦！雷达极准！";
+                document.getElementById('q1-box').style.display = 'none';
+                document.getElementById('q2-box').style.display = 'block';
+            } else {
+                document.getElementById('quiz-msg').innerText = "❌ 答错啦，再想想！";
+            }
+        }
+
+        function checkQ2() {
+            if(document.getElementById('ans2').value.trim() === "8年") {
+                for(let i=0; i<3; i++) setTimeout(fireworks.launch, i*300);
+                document.getElementById('quiz-flow').style.display = 'none';
+                document.getElementById('cakeSection').style.display = 'block';
+            } else {
+                document.getElementById('quiz-msg').innerText = "❌ 居然记错我们认识的时间，该当何罪！";
+            }
+        }
+
+        // 模拟一口口吃蛋糕小游戏
+        let cakeHealth = 100;
+        const bubbles = ["啊呜！奶油超浓郁！🥛", "切掉一块！好好吃！✨", "再来一口草莓！🍓", "快被我吃光啦！🤭"];
+        
+        function eatCake() {
+            if(cakeHealth <= 0) return;
+            cakeHealth -= 25;
+            
+            // 飘字提示
+            const tip = document.getElementById('biteTip');
+            tip.innerText = bubbles[Math.floor(Math.random() * bubbles.length)];
+            tip.style.display = 'block';
+            setTimeout(() => tip.style.display = 'none', 600);
+
+            // 视觉形象崩塌（通过透明度和形变模拟被吃掉）
+            if(cakeHealth == 75) {
+                document.getElementById('cakeTop').style.transform = 'skewX(-10deg) scaleY(0.8)';
+            } else if(cakeHealth == 50) {
+                document.getElementById('cakeTop').style.display = 'none'; // 上层被吃光
+                fireworks.launch();
+            } else if(cakeHealth == 25) {
+                document.getElementById('cakeBottom').style.transform = 'scale(0.6)';
+            } else if(cakeHealth == 0) {
+                document.getElementById('cakeBottom').style.display = 'none';
+                document.getElementById('cake-status').innerHTML = "🎉 恭喜 Irene 成功消灭整个蛋糕！<br><span style='color:var(--primary); font-size:1rem;'>获得终极成就：【肚子圆滚滚的23岁寿星】！</span>";
+                for(let i=0; i<5; i++) setTimeout(fireworks.launch, i*250);
+                return;
+            }
+            document.getElementById('cake-status').innerText = `剩余蛋糕：${cakeHealth}% 🍰`;
+        }
+
+        /* --- canvas 高级烟花引擎 --- */
+        const fireworks = (function() {
+            const canvas = document.getElementById('fireworks');
+            const ctx = canvas.getContext('2d');
+            let particles = [];
+            function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+            window.addEventListener('resize', resize); resize();
+
+            class Particle {
+                constructor(x, y, color) {
+                    this.x = x; this.y = y; this.color = color;
+                    this.velocity = { x: (Math.random() - 0.5) * 9, y: (Math.random() - 0.5) * 9 };
+                    this.alpha = 1;
+                }
+                draw() {
+                    ctx.save(); ctx.globalAlpha = this.alpha; ctx.beginPath();
+                    ctx.arc(this.x, this.y, 3, 0, Math.PI * 2); ctx.fillStyle = this.color;
+                    ctx.fill(); ctx.restore();
+                }
+                update() { this.velocity.y += 0.04; this.x += this.velocity.x; this.y += this.velocity.y; this.alpha -= 0.012; }
+            }
+            function launch() {
+                const x = Math.random() * canvas.width; const y = Math.random() * (canvas.height / 2.5) + 100;
+                const color = `hsl(${Math.random() * 360}, 85%, 65%)`;
+                for(let i=0; i<60; i++) particles.push(new Particle(x, y, color));
+            }
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                particles.forEach((p, i) => { if(p.alpha <= 0) particles.splice(i, 1); else { p.update(); p.draw(); } });
+                requestAnimationFrame(animate);
+            }
+            animate();
+            return { launch };
+        })();
+    </script>
+</body>
+</html>
